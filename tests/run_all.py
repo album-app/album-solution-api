@@ -1,9 +1,9 @@
 import time
 import unittest
 
-from tests.integration import test_integration_script_creator
+from tests.integration import test_integration_solution_script
 from tests.unit.runner import test_album_logging, test_api
-from tests.unit.runner.core.model import test_solution, test_coordinates, test_script_creator, test_solution_script
+from tests.unit.runner.core.model import test_solution, test_coordinates, test_solution_script
 
 
 def main():
@@ -17,11 +17,10 @@ def main():
     # core model
     suite.addTests(loader.loadTestsFromModule(test_solution))
     suite.addTests(loader.loadTestsFromModule(test_coordinates))
-    suite.addTests(loader.loadTestsFromModule(test_script_creator))
     suite.addTests(loader.loadTestsFromModule(test_solution_script))
 
     # integration tests
-    suite.addTests(loader.loadTestsFromModule(test_integration_script_creator))
+    suite.addTests(loader.loadTestsFromModule(test_integration_solution_script))
 
     runner = unittest.TextTestRunner(verbosity=3)
     result = runner.run(suite)

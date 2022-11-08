@@ -1,4 +1,5 @@
 from abc import ABCMeta, abstractmethod
+from enum import Enum
 from pathlib import Path
 from typing import List
 
@@ -8,6 +9,13 @@ from album.runner.core.api.model.coordinates import ICoordinates
 class ISolution:
 
     __metaclass__ = ABCMeta
+
+    class Action(Enum):
+        NO_ACTION = 0
+        INSTALL = 1
+        RUN = 2
+        TEST = 3
+        UNINSTALL = 4
 
     class ISetup(dict):
         __metaclass__ = ABCMeta
@@ -20,10 +28,6 @@ class ISolution:
 
         @abstractmethod
         def environment_path(self) -> Path:
-            raise NotImplementedError
-
-        @abstractmethod
-        def environment_name(self) -> str:
             raise NotImplementedError
 
         @abstractmethod
@@ -47,19 +51,11 @@ class ISolution:
             raise NotImplementedError
 
         @abstractmethod
+        def installation_path(self) -> Path:
+            raise NotImplementedError
+
+        @abstractmethod
         def set_environment_path(self, path: Path):
-            raise NotImplementedError
-
-        @abstractmethod
-        def set_environment_name(self, name: str):
-            raise NotImplementedError
-
-        @abstractmethod
-        def set_user_cache_path(self, user_cache_path: Path):
-            raise NotImplementedError
-
-        @abstractmethod
-        def set_internal_cache_path(self, internal_cache_path: Path):
             raise NotImplementedError
 
         @abstractmethod
@@ -67,11 +63,7 @@ class ISolution:
             raise NotImplementedError
 
         @abstractmethod
-        def set_data_path(self, data_path: Path):
-            raise NotImplementedError
-
-        @abstractmethod
-        def set_app_path(self, app_path: Path):
+        def set_installation_path(self, solution_base_path: Path):
             raise NotImplementedError
 
     @abstractmethod
@@ -87,7 +79,7 @@ class ISolution:
         raise NotImplementedError
 
     @abstractmethod
-    def script(self) -> str:
+    def script(self) -> Path:
         raise NotImplementedError
 
     @abstractmethod

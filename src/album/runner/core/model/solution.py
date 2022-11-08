@@ -1,8 +1,9 @@
 from pathlib import Path
 from typing import List
 
-from album.runner.core.api.model.solution import ISolution
 from album.runner.core.api.model.coordinates import ICoordinates
+from album.runner.core.api.model.solution import ISolution
+from album.runner.core.default_values_runner import DefaultValuesRunner
 from album.runner.core.model.coordinates import Coordinates
 
 
@@ -35,55 +36,39 @@ class Solution(ISolution):
         def __init__(self):
             super().__init__()
             # API keywords
+            self._installation_path = None
             self._environment_path = None
-            self._environment_name = None
-            self._user_cache_path = None
-            self._internal_cache_path = None
             self._package_path = None
-            self._data_path = None
-            self._app_path = None
 
         def environment_path(self) -> Path:
             return self._environment_path
 
-        def environment_name(self) -> str:
-            return self._environment_name
-
         def user_cache_path(self) -> Path:
-            return self._user_cache_path
+            return self._installation_path.joinpath(DefaultValuesRunner.solution_user_cache_prefix.value)
 
         def internal_cache_path(self) -> Path:
-            return self._internal_cache_path
+            return self._installation_path.joinpath(DefaultValuesRunner.solution_internal_cache_prefix.value)
 
         def package_path(self) -> Path:
             return self._package_path
 
+        def installation_path(self) -> Path:
+            return self._installation_path
+
         def data_path(self) -> Path:
-            return self._data_path
+            return self._installation_path.joinpath(DefaultValuesRunner.solution_data_prefix.value)
 
         def app_path(self) -> Path:
-            return self._app_path
+            return self._installation_path.joinpath(DefaultValuesRunner.solution_app_prefix.value)
 
         def set_environment_path(self, path: Path):
             self._environment_path = path
 
-        def set_environment_name(self, name: str):
-            self._environment_name = name
-
-        def set_user_cache_path(self, user_cache_path: Path):
-            self._user_cache_path = user_cache_path
-
-        def set_internal_cache_path(self, internal_cache_path: Path):
-            self._internal_cache_path = internal_cache_path
-
         def set_package_path(self, package_path: Path):
             self._package_path = package_path
 
-        def set_data_path(self, data_path: Path):
-            self._data_path = data_path
-
-        def set_app_path(self, app_path: Path):
-            self._app_path = app_path
+        def set_installation_path(self, solution_base_path: Path):
+            self._installation_path = solution_base_path
 
     def __init__(self, attrs=None):
         self._installation = Solution.Installation()
@@ -101,7 +86,7 @@ class Solution(ISolution):
     def coordinates(self) -> ICoordinates:
         return self._coordinates
 
-    def script(self) -> str:
+    def script(self) -> Path:
         return self._script
 
     def get_arg(self, k):

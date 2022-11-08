@@ -1,13 +1,16 @@
+import os
 import sys
 import tarfile
 from pathlib import Path
 from typing import Optional
 from urllib.request import urlretrieve
 
+from album.runner import album_logging
+from album.runner.album_logging import get_active_logger, configure_logging
 from album.runner.core.api.model.solution import ISolution
-
-from album.runner.album_logging import get_active_logger
+from album.runner.core.default_values_runner import DefaultValuesRunner
 from album.runner.core.model.solution import Solution
+from album.runner.core.model.solution_script import SolutionScript
 
 
 def download_if_not_exists(url, file_name):
@@ -58,40 +61,39 @@ def extract_tar(in_tar, out_dir):
 # todo: extract_zip
 
 
-def get_environment_name() -> str:
-    """Returns the environment name the solution runs in."""
-    active_solution = get_active_solution()
-    return active_solution.installation().environment_name()
-
-
 def get_environment_path() -> Path:
     """Returns the path of the environment the solution runs in."""
     active_solution = get_active_solution()
-    return Path(active_solution.installation().environment_path())
+    res = active_solution.installation().environment_path()
+    return Path(res) if res else res
 
 
 def get_data_path() -> Path:
     """Returns the data path provided for the solution."""
     active_solution = get_active_solution()
-    return Path(active_solution.installation().data_path())
+    res = active_solution.installation().data_path()
+    return Path(res) if res else res
 
 
 def get_package_path() -> Path:
     """Returns the package path provided for the solution."""
     active_solution = get_active_solution()
-    return Path(active_solution.installation().package_path())
+    res = active_solution.installation().package_path()
+    return Path(res) if res else res
 
 
 def get_app_path() -> Path:
     """Returns the app path provided for the solution."""
     active_solution = get_active_solution()
-    return Path(active_solution.installation().app_path())
+    res = active_solution.installation().app_path()
+    return Path(res) if res else res
 
 
 def get_cache_path() -> Path:
     """Returns the cache path provided for the solution."""
     active_solution = get_active_solution()
-    return Path(active_solution.installation().user_cache_path())
+    res = active_solution.installation().user_cache_path()
+    return Path(res) if res else res
 
 
 def in_target_environment() -> bool:
@@ -131,29 +133,27 @@ enc = sys.getfilesystemencoding()
 def setup(**attrs):
     """This configures a solution for the use by the main album tool."""
     global _active_solution
+    loglevel = os.getenv(DefaultValuesRunner.env_variable_logger_level.value, "INFO")
+    configure_logging("script", loglevel=album_logging.to_loglevel(loglevel),
+                      stream_handler=sys.stdout, formatter_string=SolutionScript.get_script_logging_formatter_str())
     next_solution = Solution(attrs)
     push_active_solution(next_solution)
-
-
-def album_runner_init(environment_path=None, environment_name=None, user_cache_path=None, internal_cache_path=None, data_path=None, package_path=None, app_path=None):
-    active_solution = get_active_solution()
-    if environment_path:
-        active_solution.installation().set_environment_path(environment_path.decode(enc))
-    if environment_name:
-        active_solution.installation().set_environment_name(environment_name.decode(enc))
-    if user_cache_path:
-        active_solution.installation().set_user_cache_path(user_cache_path.decode(enc))
-    if internal_cache_path:
-        active_solution.installation().set_internal_cache_path(internal_cache_path.decode(enc))
-    if data_path:
-        active_solution.installation().set_data_path(data_path.decode(enc))
+    goal = os.getenv(DefaultValuesRunner.env_variable_action.value, None)
+    if goal:
+        goal = Solution.Action[goal]
+    package_path = os.getenv(DefaultValuesRunner.env_variable_package.value, os.path.abspath(__file__))
     if package_path:
-        active_solution.installation().set_package_path(package_path.decode(enc))
-    if app_path:
-        active_solution.installation().set_app_path(app_path.decode(enc))
-    # add app_path to syspath
-    sys.path.insert(0, active_solution.installation().app_path())
-    sys.path.insert(0, active_solution.installation().package_path())
+        package_path = Path(package_path)
+    installation_base_path = os.getenv(DefaultValuesRunner.env_variable_installation.value, None)
+    if installation_base_path:
+        installation_base_path = Path(installation_base_path)
+    environment_path = os.getenv(DefaultValuesRunner.env_variable_environment.value, None)
+    if environment_path:
+        environment_path = Path(environment_path)
+    if goal:
+        next_solution.installation().set_package_path(package_path)
+        SolutionScript.trigger_solution_goal(next_solution, goal, package_path, installation_base_path, environment_path)
+
 
 def push_active_solution(solution_object: ISolution):
     """Pop a solution to the _active_solution stack."""

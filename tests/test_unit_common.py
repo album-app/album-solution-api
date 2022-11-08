@@ -52,7 +52,7 @@ class TestUnitCommon(unittest.TestCase):
     def push_test_solution(self, solution=None):
         if not solution:
             solution = Solution(self.get_solution_dict())
-        solution.installation()._user_cache_path = Path(self.tmp_dir.name)
+        solution.installation().set_installation_path(Path(self.tmp_dir.name))
         push_active_solution(solution)
 
     @staticmethod
