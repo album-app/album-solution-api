@@ -11,6 +11,8 @@
 # Creates a album environment.
 #
 .linux_base_template:
+  tags:
+    - docker
   image: python:latest
   tags:
     - docker
