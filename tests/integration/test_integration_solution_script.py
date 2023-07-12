@@ -15,7 +15,7 @@ class TestIntegrationScriptCreator(TestUnitCommon):
 
     def test__solutionaction__init__(self):
         solution = mock.create_autospec(Solution)
-        action = SolutionScript.make_action(solution, "", "dest")
+        action = SolutionScript.make_action(solution, "dest")
         parser = argparse.ArgumentParser(description='album run %s' % solution.setup().name)
         parser.add_argument("test", action=action)
 
