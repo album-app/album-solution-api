@@ -1,4 +1,3 @@
-# album-runner
+# album-solution-api
 
-Interpreting an album script.
-
+Package installed in any Album solution environment. Provides the API for the solution script.

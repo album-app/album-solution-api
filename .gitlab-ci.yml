@@ -1,4 +1,4 @@
-# CI Routine for the album-runner framework.
+# CI Routine for the album-solution-api framework.
 
 
 #----------------------------
@@ -47,9 +47,9 @@
     - bash $tmpdir/miniconda.sh -b -p $tmpdir/miniconda
     - export PATH=$PATH:$tmpdir/miniconda/bin/
     - echo $PATH
-    - conda create -y -n album-runner python=3.6 pip
+    - conda create -y -n album-solution-api python=3.6 pip
     - source $tmpdir/miniconda/bin/activate
-    - conda activate album-runner
+    - conda activate album-solution-api
     - python -V
     - pip install .
   after_script:
@@ -211,4 +211,4 @@ unit tests windows:
   extends: .windows_base_template
   stage: test
   script:
-    - $cmnd = powershell.exe -command {conda create -y -n album-runner python=3.6 pip 2>&1 | Write-Host; conda activate album-runner 2>&1 | Write-Host; pip install --no-cache-dir . 2>&1 | Write-Host; python -m unittest tests\run_all.py 2>&1 | Write-Host; exit($lastexitcode)}
+    - $cmnd = powershell.exe -command {conda create -y -n album-solution-api python=3.6 pip 2>&1 | Write-Host; conda activate album-solution-api 2>&1 | Write-Host; pip install --no-cache-dir . 2>&1 | Write-Host; python -m unittest tests\run_all.py 2>&1 | Write-Host; exit($lastexitcode)}

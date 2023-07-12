@@ -45,7 +45,7 @@ class TestAPI(TestUnitCommon):
     def test_download_if_not_exists(self):
         self.push_test_solution()
 
-        url = "https://gitlab.com/album-app/album-runner/-/raw/main/.gitlab-ci.yml?inline=false"
+        url = "https://gitlab.com/album-app/album-solution-api/-/raw/main/.gitlab-ci.yml?inline=false"
         file_name = Path(self.tmp_dir.name).joinpath("myDownload")
         r = download_if_not_exists(url, file_name)
 
