@@ -176,6 +176,11 @@ setup(**{
 from album.runner.api import setup
 def run():
     from album.runner.api import get_app_path, get_data_path, get_cache_path, get_package_path
+    import sys
+    for p in sys.path:
+        if not isinstance(p, str):
+            raise RuntimeError(f"Element {str(p)} in sys.path is not a string. It is of type: {type(p)}")
+
     print(get_cache_path())
     if not get_app_path():
         raise RuntimeError()
@@ -198,9 +203,7 @@ setup(**{
         active_solution = get_active_solution()
         active_solution.set_script(solution_content)
         tmp_dir = Path(self.tmp_dir.name)
-        active_solution.installation().set_installation_path(tmp_dir)
-        active_solution.installation().set_package_path(tmp_dir)
-        SolutionScript.trigger_solution_goal(active_solution, Solution.Action.RUN)
+        SolutionScript.trigger_solution_goal(active_solution, Solution.Action.RUN, package_path=tmp_dir, installation_base_path=tmp_dir)
 
     def test_solution_api_env_variables(self):
         solution_content = """

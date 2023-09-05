@@ -32,8 +32,6 @@ class SolutionScript:
     def trigger_solution_goal(solution, goal, package_path=None, installation_base_path=None, environment_path=None):
         SolutionScript.api_access(solution, package_path, installation_base_path, environment_path)
         parser = None
-        if package_path:
-            sys.path.append(package_path)
         if solution.setup().args:
             append_arguments = (goal == Solution.Action.RUN) or (goal == Solution.Action.TEST)
             if append_arguments:
@@ -83,11 +81,11 @@ class SolutionScript:
     def api_access(solution: ISolution, package_path, installation_base_path, environment_path):
         if package_path:
             solution.installation().set_package_path(package_path)
-            sys.path.insert(0, solution.installation().package_path())
+            sys.path.insert(0, str(solution.installation().package_path()))
         if installation_base_path:
             solution.installation().set_installation_path(installation_base_path)
             # add app_path to syspath
-            sys.path.insert(0, solution.installation().app_path())
+            sys.path.insert(0, str(solution.installation().app_path()))
         if environment_path:
             solution.installation().set_environment_path(environment_path)
 
