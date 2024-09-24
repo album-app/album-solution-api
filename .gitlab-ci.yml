@@ -8,11 +8,9 @@
 # Linux base template
 #
 # Uses a docker image where conda is already installed.
-# Creates a album environment.
+# Creates an album environment.
 #
 .linux_base_template:
-  tags:
-    - docker
   image: python:latest
   tags:
     - docker
