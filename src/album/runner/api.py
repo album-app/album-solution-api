@@ -1,8 +1,11 @@
+import json
 import os
 import sys
 import tarfile
 from pathlib import Path
 from typing import Optional
+from typing import Dict
+from typing import Any
 from urllib.request import urlretrieve
 
 from album.runner import album_logging
@@ -96,6 +99,38 @@ def get_cache_path() -> Path:
     return Path(res) if res else res
 
 
+def get_resources_dict(all: bool = True) -> Dict[str, Any]:
+    """Returns the resource files from a json as a dictionary and adds the download paths to the dictionary.
+
+    Args:
+        all: If True, all resources are returned, otherwise only the installed resources meant for the current OS are returned.
+    """
+    resources_dict = {}
+    active_solution = get_active_solution()
+    cache_path = active_solution.installation().internal_cache_path()
+
+    # get catalog name from active_solution use
+    coords = active_solution.coordinates()
+    resource_json_name = "_".join(
+        [coords.group(), coords.name(), coords.version(), "resource_file.json"]
+    )
+
+    # read json file from cache path
+    file = cache_path.joinpath(resource_json_name)
+    if file.exists():
+        # read dict from json file
+        with open(file, "r") as f:
+            resources_dict = json.load(f)
+    if not all:
+        # filter the resources that have the OS key as the current OS
+        resources_dict["resources"] = {
+            key: value
+            for key, value in resources_dict.get("resources", {}).items()
+            if value.get("os") == sys.platform
+        }
+    return resources_dict
+
+
 def in_target_environment() -> bool:
     """Gives the boolean information whether or not current python is the python from the album target environment.
 
@@ -105,8 +140,11 @@ def in_target_environment() -> bool:
     """
     active_solution = get_active_solution()
 
-    return True if sys.executable.startswith(
-        active_solution.installation().environment_path()) else False
+    return (
+        True
+        if sys.executable.startswith(active_solution.installation().environment_path())
+        else False
+    )
 
 
 def get_args():
@@ -134,25 +172,37 @@ def setup(**attrs):
     """This configures a solution for the use by the main album tool."""
     global _active_solution
     loglevel = os.getenv(DefaultValuesRunner.env_variable_logger_level.value, "INFO")
-    configure_logging("script", loglevel=album_logging.to_loglevel(loglevel),
-                      stream_handler=sys.stdout, formatter_string=SolutionScript.get_script_logging_formatter_str())
+    configure_logging(
+        "script",
+        loglevel=album_logging.to_loglevel(loglevel),
+        stream_handler=sys.stdout,
+        formatter_string=SolutionScript.get_script_logging_formatter_str(),
+    )
     next_solution = Solution(attrs)
     push_active_solution(next_solution)
     goal = os.getenv(DefaultValuesRunner.env_variable_action.value, None)
     if goal:
         goal = Solution.Action[goal]
-    package_path = os.getenv(DefaultValuesRunner.env_variable_package.value, os.path.abspath(__file__))
+    package_path = os.getenv(
+        DefaultValuesRunner.env_variable_package.value, os.path.abspath(__file__)
+    )
     if package_path:
         package_path = Path(package_path)
-    installation_base_path = os.getenv(DefaultValuesRunner.env_variable_installation.value, None)
+    installation_base_path = os.getenv(
+        DefaultValuesRunner.env_variable_installation.value, None
+    )
     if installation_base_path:
         installation_base_path = Path(installation_base_path)
-    environment_path = os.getenv(DefaultValuesRunner.env_variable_environment.value, None)
+    environment_path = os.getenv(
+        DefaultValuesRunner.env_variable_environment.value, None
+    )
     if environment_path:
         environment_path = Path(environment_path)
     if goal:
         next_solution.installation().set_package_path(package_path)
-        SolutionScript.trigger_solution_goal(next_solution, goal, package_path, installation_base_path, environment_path)
+        SolutionScript.trigger_solution_goal(
+            next_solution, goal, package_path, installation_base_path, environment_path
+        )
 
 
 def push_active_solution(solution_object: ISolution):

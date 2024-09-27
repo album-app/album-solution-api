@@ -92,6 +92,9 @@
                 "environment_file": {
                     "title": "environment_file"
                 },
+                "resource_file": {
+                    "title": "resource_file"
+                },
                 "plugins": {
                     "items": {
                         "$ref": "#/definitions/Plugin"
