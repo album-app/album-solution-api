@@ -35,26 +35,28 @@
   tags:
     - macos
     - shell
+  variables:
+    MICROMAMBA_EXECUTABLE: "" # ensure that the variable is empty before running the job
+    PIP_CACHE_DIR: $CI_PROJECT_DIR/.cache/pip
   before_script:
     - echo "$(uname)"
     - sw_vers
     - tmpdir=$(mktemp -d /tmp/album-test.XXXXXX)
     - echo $tmpdir
     - echo $tmpdir > /tmp/tmpdir
-    - curl https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-x86_64.sh --output $tmpdir/miniconda.sh
-    - bash $tmpdir/miniconda.sh -b -p $tmpdir/miniconda
-    - export PATH=$PATH:$tmpdir/miniconda/bin/
-    - echo $PATH
-    - conda create -y -n album-solution-api python=3.6 pip
-    - source $tmpdir/miniconda/bin/activate
-    - conda activate album-solution-api
-    - python -V
-    - pip install .
+    - mkdir -p $tmpdir/bin/
+    - curl -Ls https://micro.mamba.pm/api/micromamba/osx-64/1.5.6 | tar -xvj -C $tmpdir/bin/ --strip-components=1 bin/micromamba
+    - MICROMAMBA_EXECUTABLE=$tmpdir/bin/micromamba
+    - $MICROMAMBA_EXECUTABLE create -y -n album-solution-api python=3.12 -c conda-forge
+    - bash -c 'echo $CI_COMMIT_REF_NAME'
+    - $MICROMAMBA_EXECUTABLE run -n album-solution-api pip install --no-cache-dir -e .
+    - $MICROMAMBA_EXECUTABLE run -n album-solution-api python -V
+    - $MICROMAMBA_EXECUTABLE run -n album-solution-api pip list
+    - $MICROMAMBA_EXECUTABLE run -n album-solution-api env -0 | sort -z | tr '\0' '\n' | grep -i album
   after_script:
     - tmpdir=$(</tmp/tmpdir)
     - echo $tmpdir
     - rm -rf $tmpdir
-
 # Windows base template
 #
 # Downloads conda executable in <current_working_directory>\downloads if executable not present.
@@ -65,33 +67,29 @@
 .windows_base_template:
   before_script:
     - 'echo "We are in path: $pwd "'
-    - 'echo "conda URL:  $env:MINICONDA_URL "'
-    - 'if(-Not (Test-Path .\download)) {echo "Cache download not found! Creating..."; New-Item -ItemType Directory -Force -Path .\download} else { echo ".\download cache found! with content:"; Get-ChildItem -Path .\download}'                                                                                                                                                # create cache dir
-    - '[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12'                                                                                                                                                                                                                                                                                          # set Security download protocol to avoid https errors
-    - 'if(Test-Path .\download\miniconda_url.txt) {echo "found previous miniconda url information. Extracting information..."; $miniconda_cache_url = try {Get-Content -Path .\download\miniconda_url.txt -errorAction Stop} catch {echo "None"}; echo "Cached minconda executable: $miniconda_cache_url"} else { echo ".\download\miniconda_url.txt does not exist!"}'          # read url from cache
-    - 'if($miniconda_cache_url -ne $env:MINICONDA_URL) {echo "Cached URL not equal to given URL. Removing executable..."; Remove-Item -Path .\download\miniconda3.exe -Force; $force_install = "true"; echo "Force installation triggered!"} else { echo "No force installation necessary!"}'                                                                                    # check if url changed - if yes, remove cache and mark conda reinstall
-    - 'if(-Not (Test-Path .\download\miniconda3.exe)) {echo "Downloading miniconda executable..."; Invoke-WebRequest -UseBasicParsing -Uri $env:MINICONDA_URL -OutFile .\download\miniconda3.exe} else {echo "Executable found in .\download\miniconda3.exe. Reusing..."}'                                                                                                       # download the miniconda windows executable
-    - 'echo $env:MINICONDA_URL | Out-File -FilePath .\download\miniconda_url.txt'                                                                                                                                                                                                                                                                                                # cache version information
-    - 'Get-ChildItem -Path .\download'                                                                                                                                                                                                                                                                                                                                           # show download folder content
-    - '$env:PATH += ";$pwd\miniconda\condabin"'                                                                                                                                                                                                                                                                                                                                  # set path information
-    - '$env:PATH += ";$pwd\miniconda\Scripts"'
-    - '$env:PATH += ";$pwd\miniconda\Library\bin"'
-    - '$conda_available = try {Get-Command "Get-CondaEnvironment" -errorAction Stop} catch {$null}'                                                                                                                                                                                                                                                                              # check if conda cmnd already available
-    - 'if($force_install -eq "true") {$conda_available = $null}'                                                                                                                                                                                                                                                                                                                 # mark conda reinstall
-    - 'if($conda_available -eq $null) {echo "conda cmnd not available! Will install in $pwd\miniconda..."; Start-Process .\download\miniconda3.exe -argumentlist "/InstallationType=JustMe /S /D=$pwd\miniconda" -wait} else {echo "Skip downloading!..."}'
-    - 'echo "Environment path: $env:PATH"'
-    - 'conda init'
-    - 'conda config --set notify_outdated_conda false'
+    - 'Write-Output "CI_COMMIT_REF_NAME: $env:CI_COMMIT_REF_NAME"'
+    - '$7ZIP_EXE=(Join-Path $env:ProgramFiles -ChildPath 7-Zip\7z.exe)'
+    - "$7ZIP_INSTALLER=(Join-Path downloads -ChildPath 7z.exe)"
+    - "$Env:USERPROFILE=$pwd" # set user profile to current working directory -> will be micromamba default location
+    - '$oldProgressPreference = $progressPreference; $progressPreference = "SilentlyContinue";'
+    - "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12" # set Security download protocol to avoid https errors
+    - "if(-Not (Test-Path $7ZIP_EXE)) {if(-Not (Test-Path $7ZIP_INSTALLER)){Invoke-Webrequest -URI https://www.7-zip.org/a/7z2201-x64.exe -OutFile $7ZIP_INSTALLER}}"
+    - 'if(-Not (Test-Path $7ZIP_EXE)) {Start-Process -FilePath $7ZIP_INSTALLER -Args "/S" -Verb RunAs -Wait}'
+    - "Invoke-Webrequest -URI https://micro.mamba.pm/api/micromamba/win-64/1.5.6 -OutFile micromamba.tar.bz2"
+    - "& $7ZIP_EXE x micromamba.tar.bz2 -aoa"
+    - '& $7ZIP_EXE x micromamba.tar -ttar -aoa -r Library\bin\micromamba.exe $("-o" + (Join-Path -Path (Get-Location) -ChildPath micromamba_installation))'
+    - "$progressPreference = $oldProgressPreference"
+    - 'Get-ChildItem Env: | Where-Object { $_.Name -match "album" -or $_.Value -match "album" } | Format-Table -AutoSize'
+    - '.\micromamba_installation\Library\bin\micromamba.exe create -y -n album-solution-api -c conda-forge python=3.12' # created in .\micromamba\envs\album
+    - '.\micromamba_installation\Library\bin\micromamba.exe run -n album-solution-api pip install -e .'
   tags:
     - windows
   variables:
     PIP_CACHE_DIR: $CI_PROJECT_DIR\.cache\pip
     ErrorActionPreference: Continue  # not working properly
-    MINICONDA_URL: https://repo.anaconda.com/miniconda/Miniconda3-latest-Windows-x86_64.exe
   cache:
     key: one-key-to-rule-them-all-windows
     paths:
-      - .\download
       - .cache\pip
 
 #----------------------------
@@ -203,10 +201,11 @@ unit tests macos:
   extends: .macos_base_template
   stage: test
   script:
-    - python -m unittest tests/run_all.py
+    - $MICROMAMBA_EXECUTABLE run -n album-solution-api python -m unittest tests/run_all.py
 
 unit tests windows:
   extends: .windows_base_template
   stage: test
   script:
-    - $cmnd = powershell.exe -command {conda create -y -n album-solution-api python=3.6 pip 2>&1 | Write-Host; conda activate album-solution-api 2>&1 | Write-Host; pip install --no-cache-dir . 2>&1 | Write-Host; python -m unittest tests\run_all.py 2>&1 | Write-Host; exit($lastexitcode)}
+    - '.\micromamba_installation\Library\bin\micromamba.exe run -n album-solution-api python -m unittest tests\run_all.py '
+    - "exit($lastexitcode)"
