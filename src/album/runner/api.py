@@ -8,8 +8,7 @@ from typing import Dict
 from typing import Any
 from urllib.request import urlretrieve
 
-from album.runner import album_logging
-from album.runner.album_logging import get_active_logger, configure_logging
+from album.runner.album_logging import get_active_logger, configure_logging, to_loglevel
 from album.runner.core.api.model.solution import ISolution
 from album.runner.core.default_values_runner import DefaultValuesRunner
 from album.runner.core.model.solution import Solution
@@ -174,7 +173,7 @@ def setup(**attrs):
     loglevel = os.getenv(DefaultValuesRunner.env_variable_logger_level.value, "INFO")
     configure_logging(
         "script",
-        loglevel=album_logging.to_loglevel(loglevel),
+        loglevel=to_loglevel(loglevel),
         stream_handler=sys.stdout,
         formatter_string=SolutionScript.get_script_logging_formatter_str(),
     )
