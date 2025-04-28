@@ -10,9 +10,6 @@
 # Uses a docker image where conda is already installed.
 # Creates an album environment.
 #
-
-image_version: 
-
 .linux_base_template:
   image: python:$TEST_PYTHON_VERSION
   tags:
