@@ -47,7 +47,7 @@
     - mkdir -p $tmpdir/bin/
     - curl -Ls https://micro.mamba.pm/api/micromamba/osx-64/1.5.6 | tar -xvj -C $tmpdir/bin/ --strip-components=1 bin/micromamba
     - MICROMAMBA_EXECUTABLE=$tmpdir/bin/micromamba
-    - $MICROMAMBA_EXECUTABLE create -y -n album-solution-api python=$env:TEST_PYTHON_VERSION -c conda-forge
+    - $MICROMAMBA_EXECUTABLE create -y -n album-solution-api python=$TEST_PYTHON_VERSION -c conda-forge
     - bash -c 'echo $CI_COMMIT_REF_NAME'
     - $MICROMAMBA_EXECUTABLE run -n album-solution-api pip install --no-cache-dir -e .
     - $MICROMAMBA_EXECUTABLE run -n album-solution-api python -V
