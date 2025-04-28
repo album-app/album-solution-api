@@ -10,8 +10,11 @@
 # Uses a docker image where conda is already installed.
 # Creates an album environment.
 #
+
+image_version: 
+
 .linux_base_template:
-  image: python:latest
+  image: python:$TEST_PYTHON_VERSION
   tags:
     - docker
     - linux
@@ -47,7 +50,7 @@
     - mkdir -p $tmpdir/bin/
     - curl -Ls https://micro.mamba.pm/api/micromamba/osx-64/1.5.6 | tar -xvj -C $tmpdir/bin/ --strip-components=1 bin/micromamba
     - MICROMAMBA_EXECUTABLE=$tmpdir/bin/micromamba
-    - $MICROMAMBA_EXECUTABLE create -y -n album-solution-api python=3.12 -c conda-forge
+    - $MICROMAMBA_EXECUTABLE create -y -n album-solution-api python=$env:TEST_PYTHON_VERSION -c conda-forge
     - bash -c 'echo $CI_COMMIT_REF_NAME'
     - $MICROMAMBA_EXECUTABLE run -n album-solution-api pip install --no-cache-dir -e .
     - $MICROMAMBA_EXECUTABLE run -n album-solution-api python -V
@@ -80,7 +83,7 @@
     - '& $7ZIP_EXE x micromamba.tar -ttar -aoa -r Library\bin\micromamba.exe $("-o" + (Join-Path -Path (Get-Location) -ChildPath micromamba_installation))'
     - "$progressPreference = $oldProgressPreference"
     - 'Get-ChildItem Env: | Where-Object { $_.Name -match "album" -or $_.Value -match "album" } | Format-Table -AutoSize'
-    - '.\micromamba_installation\Library\bin\micromamba.exe create -y -n album-solution-api -c conda-forge python=3.12' # created in .\micromamba\envs\album
+    - '.\micromamba_installation\Library\bin\micromamba.exe create -y -n album-solution-api -c conda-forge python=$env:TEST_PYTHON_VERSION' # created in .\micromamba\envs\album
     - '.\micromamba_installation\Library\bin\micromamba.exe run -n album-solution-api pip install -e .'
   tags:
     - windows
@@ -152,7 +155,7 @@ gitlab release:
 
 
 gitlab pypi deploy:
-  image: python:latest
+  image: python:$TEST_PYTHON_VERSION
   stage: deploy
   tags:
     - DeployRunner
@@ -171,7 +174,7 @@ gitlab pypi deploy:
     - TWINE_PASSWORD=${CI_JOB_TOKEN} TWINE_USERNAME=gitlab-ci-token python -m twine upload --repository-url ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/pypi dist/*
 
 pypi deploy:
-  image: python:latest
+  image: python:$TEST_PYTHON_VERSION
   stage: deploy
   tags:
     - DeployRunner
