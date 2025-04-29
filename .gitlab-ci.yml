@@ -28,7 +28,7 @@
     - "$progressPreference = $oldProgressPreference"
     - 'Get-ChildItem Env: | Where-Object { $_.Name -match "album" -or $_.Value -match "album" } | Format-Table -AutoSize'
     - '.\micromamba_installation\Library\bin\micromamba.exe create -y -n album -c conda-forge python=$env:TEST_PYTHON_VERSION' # created in .\micromamba\envs\album
-    - '.\micromamba_installation\Library\bin\micromamba.exe run -n album pip install -no-cache-dir $Env:CI_PROJECT_DIR'
+    - '.\micromamba_installation\Library\bin\micromamba.exe run -n album pip install --no-cache-dir $Env:CI_PROJECT_DIR'
   tags:
     - windows
   variables:
@@ -54,7 +54,7 @@
     - python -V  # Print out python version for debugging
     - which python
     - pwd
-    - pip install no-cache-dir $CI_PROJECT_DIR
+    - pip install --no-cache-dir $CI_PROJECT_DIR
   variables:
     PIP_CACHE_DIR: $CI_PROJECT_DIR/.cache/pip
   cache:
