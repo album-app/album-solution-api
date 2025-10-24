@@ -16,7 +16,7 @@ We use the following:
 
 ## [unreleased]
 
-## [0.7.2]
+## [0.7.1]
 
 ### Changed
 
@@ -27,8 +27,7 @@ We use the following:
 - reconstruct changelog
 - changelog to the repository
 
-[unreleased]: https://gitlab.com/album-app/album-solution-api/-/compare/v0.7.2...HEAD
-[0.7.2]: https://gitlab.com/album-app/album-solution-api/-/compare/v0.7.1...v0.7.2
+[unreleased]: https://gitlab.com/album-app/album-solution-api/-/compare/v0.7.1...HEAD
 [0.7.1]: https://gitlab.com/album-app/album-solution-api/-/compare/v0.7.0...v0.7.1
 [0.7.0]: https://gitlab.com/album-app/album-solution-api/-/compare/v0.6.1...v0.7.0
 [0.6.1]: https://gitlab.com/album-app/album-solution-api/-/compare/v0.6.0...v0.6.1
