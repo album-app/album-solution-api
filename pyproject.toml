@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "album-solution-api"
-version = "0.7.1"
+version = "0.7.2"
 authors = [
     {name = "Jan Philipp Albrecht", email = "j.p.albrecht@fu-berlin.de"},
     {name = "Kyle Harrington", email = "album@kyleharrington.com"},
