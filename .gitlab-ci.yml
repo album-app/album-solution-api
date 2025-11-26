@@ -114,7 +114,7 @@ prepare release:
     - DeployDocker
   script:
     - echo "preparing release"
-    - version=$(cat setup.cfg | grep "version=*" | awk '{split($0, s, " "); print s[3]}')
+    - version=$(cat pyproject.toml | grep "version=*" | awk '{gsub(/"/, "", $3); print $3}')
     - TAG=v$version
     - echo "prepare to release version $version with tag $TAG"
     - echo "VERSION=$version" >> variables.env
@@ -167,8 +167,8 @@ gitlab pypi deploy:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
   script:
     - echo "deploying gitlab pypi version "$VERSION
-    - pip install twine setuptools wheel
-    - python setup.py sdist bdist_wheel
+    - pip install twine build
+    - python -m build
     - TWINE_PASSWORD=${CI_JOB_TOKEN} TWINE_USERNAME=gitlab-ci-token python -m twine upload --repository-url ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/pypi dist/*
 
 pypi deploy:
@@ -188,8 +188,8 @@ pypi deploy:
     - echo "deploying pypi version "$VERSION
     - echo "using pypi deploy user "$PYPI_DEPLOY_USER
   script:
-    - pip install twine setuptools wheel
-    - python setup.py sdist bdist_wheel
+    - pip install twine build
+    - python -m build
     - TWINE_PASSWORD=$PYPI_DEPLOY_TOKEN TWINE_USERNAME=$PYPI_DEPLOY_USER python -m twine upload --repository-url https://upload.pypi.org/legacy/  dist/*
 
 unit tests linux:
