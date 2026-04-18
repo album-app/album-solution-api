@@ -1,7 +1,7 @@
 from abc import ABCMeta, abstractmethod
 from enum import Enum
 from pathlib import Path
-from typing import List
+from typing import Any, List
 
 from album.runner.core.api.model.coordinates import ICoordinates
 
@@ -19,9 +19,15 @@ class ISolution:
 
     class ISetup(dict):
         __metaclass__ = ABCMeta
-        __getattr__ = dict.get
-        __setattr__ = dict.__setitem__
-        __delattr__ = dict.__delitem__
+
+        def __getattr__(self, name: str) -> Any:
+            return self.get(name)
+
+        def __setattr__(self, name: str, value: Any) -> None:
+            self[name] = value
+
+        def __delattr__(self, name: str) -> None:
+            del self[name]
 
     class IInstallation:
         __metaclass__ = ABCMeta
@@ -99,5 +105,5 @@ class ISolution:
         raise NotImplementedError
 
     @abstractmethod
-    def set_args(self, args: List):
+    def set_args(self, args: Any):
         raise NotImplementedError

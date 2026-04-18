@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import List
+from typing import Any, List
 
 from album.runner.core.api.model.coordinates import ICoordinates
 from album.runner.core.api.model.solution import ISolution
@@ -105,7 +105,7 @@ class Solution(ISolution):
         return isinstance(other, Solution) and \
                other.coordinates() == self._coordinates
 
-    def set_args(self, args: List):
+    def set_args(self, args: Any):
         self._args = args
 
     def args(self) -> List:
