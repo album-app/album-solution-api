@@ -33,9 +33,24 @@ class SolutionScript:
         SolutionScript.api_access(solution, package_path, installation_base_path, environment_path)
         parser = None
         if solution.setup().args:
-            append_arguments = (goal == Solution.Action.RUN) or (goal == Solution.Action.TEST)
-            if append_arguments:
+            if goal == Solution.Action.RUN:
                 parser = SolutionScript.append_arguments(solution)
+            elif goal == Solution.Action.TEST:
+                # For the test goal the arguments come from the command line and from
+                # pre_test(), which has not run at this point. Enforcing `required` here
+                # made argparse exit with "the following arguments are required: ..." for
+                # every solution that marks an argument required -- before pre_test() had
+                # any chance to provide it. Solutions worked around this by declaring
+                # required=False and writing "(required)" into the description, which hid
+                # the requirement from every consumer of the metadata. So parse the command
+                # line without enforcing `required`: pre_test() can read get_args() and
+                # adapt what the caller passed, and an invalid command line still fails
+                # before pre_test() runs. The parse that enforces `required` happens below,
+                # after pre_test()'s values are on the command line.
+                parser = SolutionScript.build_parser(solution)
+                if parser is not None:
+                    lenient_parser = SolutionScript.build_parser(solution, enforce_required=False)
+                    solution.set_args(lenient_parser.parse_args())
         if goal == Solution.Action.INSTALL:
             solution.setup().install()
         if goal == Solution.Action.UNINSTALL:
@@ -51,8 +66,10 @@ class SolutionScript:
                 d = {}
             sys.argv = sys.argv + ["=".join([c, d[c]]) for c in d]
 
-            # parse args again after pre_test() routine if necessary.
-            if parser and "args" in solution.setup().keys():
+            # The parse that counts for the test goal: pre_test()'s arguments now follow
+            # the caller's, so they win, and a required argument pre_test() supplies is
+            # satisfied rather than fatal.
+            if parser is not None:
                 args = parser.parse_args()
                 solution.set_args(args)
 
@@ -111,16 +128,32 @@ class SolutionScript:
             raise ArgumentError(argument=args, message=message)
 
     @staticmethod
-    def _handle_args_list(solution: ISolution):
+    def build_parser(solution: ISolution, enforce_required=True):
+        """The argument parser for a solution's declared arguments, built but not yet parsed.
+
+        Returns None when the solution declares its arguments as a string ('pass-through'),
+        which is validated the same way append_arguments() validates it. Separated from the
+        parse so that the test goal can enforce required arguments only after pre_test() has
+        run. With enforce_required=False, no argument is marked required: the test goal parses
+        the command line that way for pre_test(), which may still supply them.
+        """
+        if isinstance(solution.setup().args, str):
+            SolutionScript._handle_args_string(solution.setup().args)
+            return None
         parser = argparse.ArgumentParser(description='album run %s' % solution.setup().name)
         for arg in solution.setup().args:
-            SolutionScript._add_parser_argument(solution, parser, arg)
+            SolutionScript._add_parser_argument(solution, parser, arg, enforce_required)
+        return parser
+
+    @staticmethod
+    def _handle_args_list(solution: ISolution):
+        parser = SolutionScript.build_parser(solution)
         args = parser.parse_args()
         solution.set_args(args)
         return parser
 
     @staticmethod
-    def _add_parser_argument(solution, parser, arg):
+    def _add_parser_argument(solution, parser, arg, enforce_required=True):
         keys = arg.keys()
 
         if 'default' in keys and 'action' in keys:
@@ -136,7 +169,7 @@ class SolutionScript:
             args['help'] = arg['description']
         if 'type' in keys:
             args['type'] = SolutionScript._parse_type(arg['type'])
-        if 'required' in keys:
+        if 'required' in keys and enforce_required:
             args['required'] = arg['required']
         parser.add_argument('--%s' % arg['name'], **args)
 
