@@ -103,11 +103,14 @@ def get_cache_path() -> Path:
 
 
 def get_resources_dict(os_specific: bool = False) -> Dict[str, Any]:
-    """Return the resource files from a json as a dictionary and adds the download paths to the dictionary.
+    """Return the resources of the solution, as declared in its resource file, with the path of each file.
+
+    The dictionary has the form ``{"resources": {<key>: {"name": ..., "path": ..., ...}}}``. A resource
+    meant for another OS is not downloaded, its path is None.
 
     Args:
-        os_specific: If True, all resources are returned, otherwise only the installed resources
-        meant for the current OS are returned.
+        os_specific: If True, only the resources meant for the current OS are returned, otherwise all
+        resources are returned.
     """
     resources_dict = {}
     active_solution = get_active_solution()
