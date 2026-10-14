@@ -16,6 +16,28 @@ We use the following:
 
 ## [unreleased]
 
+## [0.7.3]
+
+### Changed
+
+- Python 3.14 is listed among the supported Python versions; the CI tests it
+
+### Fixed
+
+- `album test`: the arguments of the test goal are parsed before `pre_test()` runs, so a required argument cannot be
+  supplied by `pre_test()` (!16, album#171)
+- `get_resources_dict()`: the docstring describes `os_specific` inverted and does not say what the dictionary holds (!17)
+
+## [0.7.2]
+
+### Changed
+
+- the CI sets up Python with a newer micromamba version
+
+### Fixed
+
+- mypy issues (!14)
+
 ## [0.7.1]
 
 ### Changed
@@ -27,7 +49,9 @@ We use the following:
 - reconstruct changelog
 - changelog to the repository
 
-[unreleased]: https://gitlab.com/album-app/album-solution-api/-/compare/v0.7.1...HEAD
+[unreleased]: https://gitlab.com/album-app/album-solution-api/-/compare/v0.7.3...HEAD
+[0.7.3]: https://gitlab.com/album-app/album-solution-api/-/compare/v0.7.2...v0.7.3
+[0.7.2]: https://gitlab.com/album-app/album-solution-api/-/compare/v0.7.1...v0.7.2
 [0.7.1]: https://gitlab.com/album-app/album-solution-api/-/compare/v0.7.0...v0.7.1
 [0.7.0]: https://gitlab.com/album-app/album-solution-api/-/compare/v0.6.1...v0.7.0
 [0.6.1]: https://gitlab.com/album-app/album-solution-api/-/compare/v0.6.0...v0.6.1
