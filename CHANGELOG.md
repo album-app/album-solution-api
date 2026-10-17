@@ -16,6 +16,13 @@ We use the following:
 
 ## [unreleased]
 
+### Added
+
+- `download_verified(url, file_name, known_hash)` downloads a file into the cache of the solution if it is not there,
+  as `download_if_not_exists` does, and checks its content against a hash written as in the resource file of a
+  solution, e.g. `"sha256:<hex digest>"`: a file in the cache with another content is downloaded again, a download
+  with another content is removed and raises a `ValueError` (!19, album#265). It needs no other package.
+
 ## [0.7.3]
 
 ### Changed
