@@ -24,10 +24,15 @@ We use the following:
   as `download_if_not_exists` does, and checks its content against a hash written as in the resource file of a
   solution, e.g. `"sha256:<hex digest>"`: a file in the cache with another content is downloaded again, a download
   with another content is removed and raises a `ValueError` (!19, album#265). It needs no other package.
+- Arguments can have the type `str`, `int` or `bool`, the Python names of `string`, `integer` and `boolean`
+  (album#240). A solution that uses them needs `album_api_version` 0.7.3 or newer: older versions pass the value on
+  as text.
 
 ### Changed
 
 - Python 3.14 is listed among the supported Python versions; the CI tests it
+- An argument with an unknown type stops the solution with a `ValueError` that names the argument and the type,
+  instead of passing its value on as text (album#240)
 
 ### Fixed
 

@@ -168,7 +168,7 @@ class SolutionScript:
         if 'description' in keys:
             args['help'] = arg['description']
         if 'type' in keys:
-            args['type'] = SolutionScript._parse_type(arg['type'])
+            args['type'] = SolutionScript._parse_type(arg['type'], arg['name'])
         if 'required' in keys and enforce_required:
             args['required'] = arg['required']
         parser.add_argument('--%s' % arg['name'], **args)
@@ -189,16 +189,22 @@ class SolutionScript:
             raise ValueError("invalid truth value %r" % (val,))
 
     @staticmethod
-    def _parse_type(type_str):
-        if type_str == 'string':
+    def _parse_type(type_str, arg_name):
+        # str, int and bool are the Python names of string, integer and boolean
+        if type_str in ('string', 'str'):
             return str
         if type_str == 'file':
             return Path
         if type_str == 'directory':
             return Path
-        if type_str == 'integer':
+        if type_str in ('integer', 'int'):
             return int
         if type_str == 'float':
             return float
-        if type_str == 'boolean':
+        if type_str in ('boolean', 'bool'):
             return SolutionScript.strtobool
+        # without a type function argparse would pass the value on as text
+        raise ValueError(
+            'The argument %s has the unknown type %r. Known types are str, int, float, bool, file and directory, '
+            'and string, integer and boolean.' % (arg_name, type_str)
+        )
