@@ -64,7 +64,7 @@
                 "type": {
                     "title": "type",
                     "type": "string",
-                    "enum": ["string", "file", "directory", "boolean", "integer", "float"]
+                    "enum": ["string", "file", "directory", "boolean", "integer", "float", "str", "bool", "int"]
                 },
                 "default": {
                     "title": "default"
