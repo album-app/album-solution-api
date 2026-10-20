@@ -33,6 +33,8 @@ We use the following:
 - Python 3.14 is listed among the supported Python versions; the CI tests it
 - An argument with an unknown type stops the solution with a `ValueError` that names the argument and the type,
   instead of passing its value on as text (album#240)
+- CI: a merge into main starts the release jobs only if it changes `pyproject.toml`, as in the other album
+  repositories
 
 ### Fixed
 
