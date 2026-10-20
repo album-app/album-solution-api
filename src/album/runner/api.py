@@ -1,10 +1,11 @@
 """This module provides the API for the album runner."""
+import hashlib
 import json
 import os
 import sys
 import tarfile
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Tuple, Union
 from urllib.request import urlretrieve
 
 from album.runner.album_logging import configure_logging, get_active_logger, to_loglevel
@@ -16,6 +17,8 @@ from album.runner.core.model.solution_script import SolutionScript
 
 def download_if_not_exists(url, file_name):
     """Download resource if not already cached and returns local resource path.
+
+    Its content is not checked, download_verified checks it against a known hash.
 
     Args:
         url: The URL of the download.
@@ -38,6 +41,76 @@ def download_if_not_exists(url, file_name):
     urlretrieve(url, download_path)
 
     return download_path
+
+
+def download_verified(url: str, file_name: Union[str, Path], known_hash: str) -> Path:
+    """Download a file into the cache of the solution if it is not there, and check its content.
+
+    The content has to have the hash known_hash, written as in the resource file of a solution:
+    ``"sha256:<hex digest>"``, another algorithm of hashlib instead of sha256 (e.g. ``"md5:<hex digest>"``), or the
+    hex digest alone for sha256. A file in the cache with another content is downloaded again; a download with
+    another content is removed.
+
+    Args:
+        url: The URL of the download.
+        file_name: The local filename of the download, in the cache of the solution.
+        known_hash: The hash of the content.
+
+    Returns: The path to the file.
+
+    Raises:
+        ValueError: If known_hash names an algorithm hashlib does not know, or the download has another hash.
+
+    """
+    algorithm, digest = _split_hash(known_hash)
+    download_path = get_cache_path().joinpath(file_name)
+
+    if download_path.exists():
+        if _file_hash(download_path, algorithm) == digest:
+            get_active_logger().info(f"Found cache of {url}: {download_path}...")
+            return download_path
+        get_active_logger().info(
+            f"The cache of {url} has another content: {download_path}..."
+        )
+    download_path.parent.mkdir(parents=True, exist_ok=True)
+
+    get_active_logger().info(f"Downloading {url} to {download_path}...")
+
+    # downloaded next to the file, which it replaces only with the right content
+    part_path = download_path.with_name(download_path.name + ".part")
+    try:
+        urlretrieve(url, part_path)
+        download_hash = _file_hash(part_path, algorithm)
+        if download_hash == digest:
+            os.replace(part_path, download_path)
+            return download_path
+    finally:
+        if part_path.exists():
+            part_path.unlink()
+    raise ValueError(
+        f"The download of {url} has the {algorithm} hash {download_hash}, not {digest}."
+    )
+
+
+def _split_hash(known_hash: str) -> Tuple[str, str]:
+    """Return the algorithm and the hex digest of a hash, sha256 if it names no algorithm."""
+    algorithm, _, digest = known_hash.rpartition(":")
+    algorithm = (algorithm or "sha256").lower()
+    # a shake algorithm needs the length of its digest
+    if algorithm not in hashlib.algorithms_guaranteed or algorithm.startswith("shake_"):
+        raise ValueError(
+            f'The hash "{known_hash}" names an algorithm hashlib does not know.'
+        )
+    return algorithm, digest.lower()
+
+
+def _file_hash(path: Path, algorithm: str) -> str:
+    """Return the hex digest of the content of a file."""
+    file_hash = hashlib.new(algorithm)
+    with open(path, "rb") as file:
+        for chunk in iter(lambda: file.read(1024 * 1024), b""):
+            file_hash.update(chunk)
+    return file_hash.hexdigest()
 
 
 def extract_tar(in_tar, out_dir):
@@ -103,11 +176,14 @@ def get_cache_path() -> Path:
 
 
 def get_resources_dict(os_specific: bool = False) -> Dict[str, Any]:
-    """Return the resource files from a json as a dictionary and adds the download paths to the dictionary.
+    """Return the resources of the solution, as declared in its resource file, with the path of each file.
+
+    The dictionary has the form ``{"resources": {<key>: {"name": ..., "path": ..., ...}}}``. A resource
+    meant for another OS is not downloaded, its path is None.
 
     Args:
-        os_specific: If True, all resources are returned, otherwise only the installed resources
-        meant for the current OS are returned.
+        os_specific: If True, only the resources meant for the current OS are returned, otherwise all
+        resources are returned.
     """
     resources_dict = {}
     active_solution = get_active_solution()

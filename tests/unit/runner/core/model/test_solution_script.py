@@ -69,3 +69,42 @@ class TestSolutionScript(TestUnitCommon):
         self.assertIn('myname', args)
         self.assertIsInstance(args.myname, Path)
 
+    def test__add_parser_argument_python_type_names(self):
+        solution = None
+        args = {
+            'name': 'myname',
+            'type': 'int'
+        }
+        parser = argparse.ArgumentParser()
+        SolutionScript._add_parser_argument(solution, parser, args)
+        args = parser.parse_args(["--myname", "5"])
+        self.assertEqual(args.myname, 5)
+
+        args = {
+            'name': 'myname',
+            'type': 'bool'
+        }
+        parser = argparse.ArgumentParser()
+        SolutionScript._add_parser_argument(solution, parser, args)
+        args = parser.parse_args(["--myname", "false"])
+        self.assertIs(args.myname, False)
+
+        args = {
+            'name': 'myname',
+            'type': 'str'
+        }
+        parser = argparse.ArgumentParser()
+        SolutionScript._add_parser_argument(solution, parser, args)
+        args = parser.parse_args(["--myname", "5"])
+        self.assertEqual(args.myname, "5")
+
+    def test__add_parser_argument_unknown_type(self):
+        args = {
+            'name': 'myname',
+            'type': 'integr'
+        }
+        parser = argparse.ArgumentParser()
+        with self.assertRaises(ValueError) as context:
+            SolutionScript._add_parser_argument(None, parser, args)
+        self.assertIn("The argument myname has the unknown type 'integr'.", str(context.exception))
+
