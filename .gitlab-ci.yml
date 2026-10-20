@@ -121,6 +121,8 @@ prepare release:
     - DeployRunner
     - DeployDocker
   script:
+    # The release process switches ALBUM_DEV_ENVIRONMENTS off before this package is released (see the wiki).
+    - if [ "$ALBUM_DEV_ENVIRONMENTS" = "True" ]; then echo "Not released. ALBUM_DEV_ENVIRONMENTS is True, the release process switches it off first. Switch the group variable off and retry this job."; exit 1; fi
     - echo "preparing release"
     - version=$(cat pyproject.toml | grep "version=*" | awk '{gsub(/"/, "", $3); print $3}')
     - TAG=v$version

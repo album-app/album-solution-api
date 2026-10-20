@@ -35,6 +35,8 @@ We use the following:
   instead of passing its value on as text (album#240)
 - CI: a merge into main starts the release jobs only if it changes `pyproject.toml`, as in the other album
   repositories
+- CI: `prepare release` stops with a message while the group variable `ALBUM_DEV_ENVIRONMENTS` is on, so a
+  merge into main during the preparations of a release publishes nothing
 
 ### Fixed
 
